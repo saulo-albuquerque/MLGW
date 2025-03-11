@@ -1952,7 +1952,7 @@ class mode_generator_NN(mode_generator_base):
             grads = tape.gradient(outputs, input_tensor).numpy()
             gradients[:, comps_to_list(comps)] += grads
 
-        return gradients
+        	return gradients
 	
 	def __NN_gradients(self, theta, mlgw_NN, feature_list):
 		"""
