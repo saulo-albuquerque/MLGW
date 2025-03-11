@@ -34,11 +34,11 @@ sys.path.insert(1, os.path.dirname(__file__)) 	#adding to path folder where mlgw
 from .EM_MoE import MoE_model #WARNING commented out 
 from .ML_routines import PCA_model, add_extra_features, jac_extra_features, augment_features
 from .NN_model import mlgw_NN
-from .precession_helper import angle_manager, get_alpha0_beta0_gamma0, angle_params_keeper, CosinesLayer, augment_for_angles, to_polar, get_beta_trend_fast, get_fref_at_time_IMR
+#from .precession_helper import angle_manager, get_alpha0_beta0_gamma0, angle_params_keeper, CosinesLayer, augment_for_angles, to_polar, get_beta_trend_fast, get_fref_at_time_IMR
 from scipy.special import factorial as fact
 from pathlib import Path
 import scipy
-import precession
+#import precession
 
 
 import matplotlib.pyplot as plt #DEBUG
@@ -1903,126 +1903,124 @@ class mode_generator_NN(mode_generator_base):
 
 		return amp_pred, ph_pred
 
-	def get_input_gradients(self, theta):
-        	"""
-        	Compute the gradients of the outputs with respect to the inputs.
+	#def get_input_gradients(self, theta):
+        #	"""
+        #	Compute the gradients of the outputs with respect to the inputs.
 
-        	Input:
-            	theta: np.ndarray
-                shape (N, 3) - source parameters to make prediction at
+        #	Input:
+        #    	theta: np.ndarray
+        #        shape (N, 3) - source parameters to make prediction at
 
-        	Output:
-            	gradients: np.ndarray
-                	shape (N, 3) - Gradients of the outputs with respect to the inputs
-        	"""
-        	gradients = np.zeros((theta.shape[0], theta.shape[1]), dtype=np.float32)
-        	comps_to_list = lambda comps_str: [int(c) for c in comps_str]
+        #	Output:
+        #    	gradients: np.ndarray
+        #        	shape (N, 3) - Gradients of the outputs with respect to the inputs
+        #	"""
+        #	gradients = np.zeros((theta.shape[0], theta.shape[1]), dtype=np.float32)
+        #	comps_to_list = lambda comps_str: [int(c) for c in comps_str]
 
-        	for comps, model in self.amp_models.items():
-            		augmented_theta = augment_features(theta, model.features)
-            		input_tensor = tf.constant(augmented_theta.astype(np.float32))
+        #	for comps, model in self.amp_models.items():
+        #    		augmented_theta = augment_features(theta, model.features)
+        #    		input_tensor = tf.constant(augmented_theta.astype(np.float32))
             
-            	with tf.GradientTape() as tape:
-                	tape.watch(input_tensor)
-                	outputs = model(input_tensor)
+        #    	with tf.GradientTape() as tape:
+        #        	tape.watch(input_tensor)
+        #        	outputs = model(input_tensor)
             
-            	grads = tape.gradient(outputs, input_tensor).numpy()
-            	gradients[:, comps_to_list(comps)] += grads
+        #    	grads = tape.gradient(outputs, input_tensor).numpy()
+        #    	gradients[:, comps_to_list(comps)] += grads
         
-        	for comps, model in self.ph_models.items():
-            		augmented_theta = augment_features(theta, model.features)
-            		input_tensor = tf.constant(augmented_theta.astype(np.float32))
+        #	for comps, model in self.ph_models.items():
+        #    		augmented_theta = augment_features(theta, model.features)
+        #    		input_tensor = tf.constant(augmented_theta.astype(np.float32))
+        #    
+        #    	with tf.GradientTape() as tape:
+        #        	tape.watch(input_tensor)
+        #        	outputs = model(input_tensor)
             
-            	with tf.GradientTape() as tape:
-                	tape.watch(input_tensor)
-                	outputs = model(input_tensor)
-            
-            	grads = tape.gradient(outputs, input_tensor).numpy()
-            	gradients[:, comps_to_list(comps)] += grads
+        #    	grads = tape.gradient(outputs, input_tensor).numpy()
+        #    	gradients[:, comps_to_list(comps)] += grads
 
         	# Handling residuals
-        	for comps, model in self.ph_residual_models.items():
-            		augmented_theta = augment_features(theta, model.features)
-            		input_tensor = tf.constant(augmented_theta.astype(np.float32))
+        #	for comps, model in self.ph_residual_models.items():
+        #    		augmented_theta = augment_features(theta, model.features)
+        #    		input_tensor = tf.constant(augmented_theta.astype(np.float32))
             
-            	with tf.GradientTape() as tape:
-                	tape.watch(input_tensor)
-                	outputs = model(input_tensor) * self.ph_res_coefficients[comps]
+        #    	with tf.GradientTape() as tape:
+        #        	tape.watch(input_tensor)
+        #        	outputs = model(input_tensor) * self.ph_res_coefficients[comps]
             
-            	grads = tape.gradient(outputs, input_tensor).numpy()
-            	gradients[:, comps_to_list(comps)] += grads
+        #    	grads = tape.gradient(outputs, input_tensor).numpy()
+        #    	gradients[:, comps_to_list(comps)] += grads
 
-        	return gradients
+        #	return gradients
 	
-	def __NN_gradients(self, theta, mlgw_NN, feature_list):
-		"""
-		Computes the gradient of a MoE model with basis function expansion at the given value of theta.
-		Gradient is computed with the chain rule:
-			D_i y= D_j y * D_j/D_i
-		where D_j/D_i is the jacobian of the feature augmentation.
-		
-		Input:
-			theta: :class:`~numpy:numpy.ndarray`
-				shape (N,3) - Values of orbital parameters to compute the gradient at
-			mlgw_NN: :class:`mlgw_NN`
-				A mixture of expert models to make the gradient of
-			feature_list: list
-				List of features used in data augmentation
-		
-		Output:
-			gradients: :class:`~numpy:numpy.ndarray`
-				shape (N,3) - Gradients for the model
-		"""
-			#L = len(feature_list)
-		jac_transf = jac_extra_features(theta, feature_list, log_list = [0]) #(N,3+L,3)
-		NN_grads = mlgw_NN.get_gradient(add_extra_features(theta, feature_list, log_list = [0])) #(N,3+L)
-		gradients = np.multiply(jac_transf, NN_grads[:,:,None]) #(N,3+L,3)
-		gradients = np.sum(gradients, axis =1) #(N,3)
-		return gradients
+	#def __NN_gradients(self, theta, mlgw_NN, feature_list):
+	#	"""
+	#	Computes the gradient of a MoE model with basis function expansion at the given value of theta.
+	#	Gradient is computed with the chain rule:
+	#		D_i y= D_j y * D_j/D_i
+	#	where D_j/D_i is the jacobian of the feature augmentation.
+	#	
+	#	Input:
+	#		theta: :class:`~numpy:numpy.ndarray`
+	#			shape (N,3) - Values of orbital parameters to compute the gradient at
+	#		mlgw_NN: :class:`mlgw_NN`
+	#			A mixture of expert models to make the gradient of
+	#		feature_list: list
+	#			List of features used in data augmentation
+	#	
+	#	Output:
+	#		gradients: :class:`~numpy:numpy.ndarray`
+	#			shape (N,3) - Gradients for the model
+	#	"""
+	#		#L = len(feature_list)
+	#	jac_transf = jac_extra_features(theta, feature_list, log_list = [0]) #(N,3+L,3)
+	#	NN_grads = mlgw_NN.get_gradient(add_extra_features(theta, feature_list, log_list = [0])) #(N,3+L)
+	#	gradients = np.multiply(jac_transf, NN_grads[:,:,None]) #(N,3+L,3)
+	#	gradients = np.sum(gradients, axis =1) #(N,3)
+	#	return gradients
 
-	def get_raw_grads(self, theta):
-		"""
-		Computes the gradients of the amplitude and phase w.r.t. (q,s1,s2).
-		Gradients are functions dependent on time and are evaluated on the internal reduced grid (mode_generator.get_time_grid()).
+	#def get_raw_grads(self, theta):
+	#	"""
+	#	Computes the gradients of the amplitude and phase w.r.t. (q,s1,s2).
+	#	Gradients are functions dependent on time and are evaluated on the internal reduced grid (mode_generator.get_time_grid()).
+#
+	#	Input:
+	#		theta: :class:`~numpy:numpy.ndarray`
+	#			shape (N,3) - Values of orbital parameters to compute the gradient at
+	#	
+	#	Output:
+	#		grad_amp: :class:`~numpy:numpy.ndarray`
+	#			shape (N,D,3) - Gradients of the amplitude
+	#		grad_ph: :class:`~numpy:numpy.ndarray`
+	#			shape (N,D,3) - Gradients of the phase
+	#	"""
+	#		#computing gradient for the reduced coefficients g
+	#	#amp
+	#	D, K_amp = self.amp_PCA.get_dimensions()
+	#	grad_g_amp = np.zeros((theta.shape[0], K_amp, theta.shape[1])) #(N,K,3)
+	#	for k in range(K_amp):
+	#		grad_g_amp[:,k,:] = self.__NN_gradients(theta, self.NN_models_amp[k], self.amp_features) #(N,3)
+	#	#ph
+	#	D, K_ph = self.ph_PCA.get_dimensions()
+	#	grad_g_ph = np.zeros((theta.shape[0], K_ph, theta.shape[1])) #(N,K,3)
+	#	for k in range(K_ph):
+	#		grad_g_ph[:,k,:] = self.__NN_gradients(theta, self.NN_models_ph[k], self.ph_features) #(N,3)
+	#	
+	#		#computing gradients
+	#	#amp
+	#	grad_amp = np.zeros((theta.shape[0], D, theta.shape[1])) #(N,D,3)
+	#	for i in range(theta.shape[1]):
+	#		grad_amp[:,:,i] = self.amp_PCA.reconstruct_data(grad_g_amp[:,:,i]) - self.amp_PCA.PCA_params[1] #(N,D)
+	#	#ph
+	#	grad_ph = np.zeros((theta.shape[0], D, theta.shape[1])) #(N,D,3)
+	#	for i in range(theta.shape[1]):
+	#		grad_ph[:,:,i] = self.ph_PCA.reconstruct_data(grad_g_ph[:,:,i]) - self.ph_PCA.PCA_params[1] #(N,D)
+#
+#		return grad_amp, grad_ph
 
-		Input:
-			theta: :class:`~numpy:numpy.ndarray`
-				shape (N,3) - Values of orbital parameters to compute the gradient at
-		
-		Output:
-			grad_amp: :class:`~numpy:numpy.ndarray`
-				shape (N,D,3) - Gradients of the amplitude
-			grad_ph: :class:`~numpy:numpy.ndarray`
-				shape (N,D,3) - Gradients of the phase
-		"""
-			#computing gradient for the reduced coefficients g
-		#amp
-		D, K_amp = self.amp_PCA.get_dimensions()
-		grad_g_amp = np.zeros((theta.shape[0], K_amp, theta.shape[1])) #(N,K,3)
-		for k in range(K_amp):
-			grad_g_amp[:,k,:] = self.__NN_gradients(theta, self.NN_models_amp[k], self.amp_features) #(N,3)
-		#ph
-		D, K_ph = self.ph_PCA.get_dimensions()
-		grad_g_ph = np.zeros((theta.shape[0], K_ph, theta.shape[1])) #(N,K,3)
-		for k in range(K_ph):
-			grad_g_ph[:,k,:] = self.__NN_gradients(theta, self.NN_models_ph[k], self.ph_features) #(N,3)
-		
-			#computing gradients
-		#amp
-		grad_amp = np.zeros((theta.shape[0], D, theta.shape[1])) #(N,D,3)
-		for i in range(theta.shape[1]):
-			grad_amp[:,:,i] = self.amp_PCA.reconstruct_data(grad_g_amp[:,:,i]) - self.amp_PCA.PCA_params[1] #(N,D)
-		#ph
-		grad_ph = np.zeros((theta.shape[0], D, theta.shape[1])) #(N,D,3)
-		for i in range(theta.shape[1]):
-			grad_ph[:,:,i] = self.ph_PCA.reconstruct_data(grad_g_ph[:,:,i]) - self.ph_PCA.PCA_params[1] #(N,D)
-
-		return grad_amp, grad_ph
 
 
-#################
-
-"""	
 
 	
 
