@@ -21,3 +21,4 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from .GW_generator import GW_generator, list_models
 from .GW_generator import mode_generator_base
 from .GW_generator import mode_generator_NN
+from .NN_model import mlgw_NN
