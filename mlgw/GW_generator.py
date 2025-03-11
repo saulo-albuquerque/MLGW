@@ -1904,53 +1904,53 @@ class mode_generator_NN(mode_generator_base):
 		return amp_pred, ph_pred
 
 	def get_input_gradients(self, theta):
-        """
-        Compute the gradients of the outputs with respect to the inputs.
+        	"""
+        	Compute the gradients of the outputs with respect to the inputs.
 
-        Input:
-            theta: np.ndarray
+        	Input:
+            	theta: np.ndarray
                 shape (N, 3) - source parameters to make prediction at
 
-        Output:
-            gradients: np.ndarray
-                shape (N, 3) - Gradients of the outputs with respect to the inputs
-        """
-        gradients = np.zeros((theta.shape[0], theta.shape[1]), dtype=np.float32)
-        comps_to_list = lambda comps_str: [int(c) for c in comps_str]
+        	Output:
+            	gradients: np.ndarray
+                	shape (N, 3) - Gradients of the outputs with respect to the inputs
+        	"""
+        	gradients = np.zeros((theta.shape[0], theta.shape[1]), dtype=np.float32)
+        	comps_to_list = lambda comps_str: [int(c) for c in comps_str]
 
-        for comps, model in self.amp_models.items():
-            augmented_theta = augment_features(theta, model.features)
-            input_tensor = tf.constant(augmented_theta.astype(np.float32))
+        	for comps, model in self.amp_models.items():
+            		augmented_theta = augment_features(theta, model.features)
+            		input_tensor = tf.constant(augmented_theta.astype(np.float32))
             
-            with tf.GradientTape() as tape:
-                tape.watch(input_tensor)
-                outputs = model(input_tensor)
+            	with tf.GradientTape() as tape:
+                	tape.watch(input_tensor)
+                	outputs = model(input_tensor)
             
-            grads = tape.gradient(outputs, input_tensor).numpy()
-            gradients[:, comps_to_list(comps)] += grads
+            	grads = tape.gradient(outputs, input_tensor).numpy()
+            	gradients[:, comps_to_list(comps)] += grads
         
-        for comps, model in self.ph_models.items():
-            augmented_theta = augment_features(theta, model.features)
-            input_tensor = tf.constant(augmented_theta.astype(np.float32))
+        	for comps, model in self.ph_models.items():
+            		augmented_theta = augment_features(theta, model.features)
+            		input_tensor = tf.constant(augmented_theta.astype(np.float32))
             
-            with tf.GradientTape() as tape:
-                tape.watch(input_tensor)
-                outputs = model(input_tensor)
+            	with tf.GradientTape() as tape:
+                	tape.watch(input_tensor)
+                	outputs = model(input_tensor)
             
-            grads = tape.gradient(outputs, input_tensor).numpy()
-            gradients[:, comps_to_list(comps)] += grads
+            	grads = tape.gradient(outputs, input_tensor).numpy()
+            	gradients[:, comps_to_list(comps)] += grads
 
-        # Handling residuals
-        for comps, model in self.ph_residual_models.items():
-            augmented_theta = augment_features(theta, model.features)
-            input_tensor = tf.constant(augmented_theta.astype(np.float32))
+        	# Handling residuals
+        	for comps, model in self.ph_residual_models.items():
+            		augmented_theta = augment_features(theta, model.features)
+            		input_tensor = tf.constant(augmented_theta.astype(np.float32))
             
-            with tf.GradientTape() as tape:
-                tape.watch(input_tensor)
-                outputs = model(input_tensor) * self.ph_res_coefficients[comps]
+            	with tf.GradientTape() as tape:
+                	tape.watch(input_tensor)
+                	outputs = model(input_tensor) * self.ph_res_coefficients[comps]
             
-            grads = tape.gradient(outputs, input_tensor).numpy()
-            gradients[:, comps_to_list(comps)] += grads
+            	grads = tape.gradient(outputs, input_tensor).numpy()
+            	gradients[:, comps_to_list(comps)] += grads
 
         	return gradients
 	
