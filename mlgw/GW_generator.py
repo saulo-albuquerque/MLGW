@@ -1902,6 +1902,7 @@ class mode_generator_NN(mode_generator_base):
 			ph_pred[:,comps_to_list(comps)] += model(input_)[0].numpy()*self.ph_res_coefficients[comps]
 
 		return amp_pred, ph_pred
+
 	def get_input_gradients(self, theta):
         """
         Compute the gradients of the outputs with respect to the inputs.
