@@ -335,7 +335,24 @@ class mlgw_NN(keras.Sequential):
 		if x.shape[-1] == 3:
 			x = augment_features(x, features=self.features)
 		return super().predict(x, **kwargs)
-
+	def get_gradient(self, X):
+        	"""
+        	get_gradient
+        	============
+        	Returns the gradient of the prediction y:
+            	grad_ni = D_i y_n
+        	where grad has shape (D,) and D_i denotes the partial derivative w.r.t. x_i.
+        	Input:
+            	X (N,D)
+        	Output:
+            	grad (N,D)
+       		"""
+        	assert X.shape[1] == self.input_shape[-1]
+        	with tf.GradientTape() as tape:
+            		tape.watch(X)
+            		prediction = self.call(X)
+        		grad = tape.gradient(prediction, X)
+        	return grad
 	@classmethod
 	def load_from_folder(cls, model_loc, name = None):
 		model_loc = str(model_loc)
