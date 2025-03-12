@@ -1921,7 +1921,7 @@ class mode_generator_NN(mode_generator_base):
 		ph_grad = np.zeros((theta.shape[0], self.ph_PCA.get_dimensions()[1],theta.shape[1]))
 		input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
 		#
-		for comps, model in self.amp_models.items()
+		for comps, model in self.amp_models.items():
 			input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
 			with tf.GradientTape() as tape:
          			tape.watch(input_)  # Watch the input tensor
