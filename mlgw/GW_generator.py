@@ -1927,7 +1927,7 @@ class mode_generator_NN(mode_generator_base):
 				tape.watch(input_)
 				predict_amp=model(input_)
 				jacobian_amp=tape.jacobian(predict_amp,input_)
-				print(jacobian_amp)
+				print("jacobian_amp",jacobian_amp)
 				
 		for comps, model in self.ph_models.items():
 			#ph_pred[:,comps_to_list(comps)] = model(augment_features(theta, model.features)).numpy()
@@ -1936,7 +1936,7 @@ class mode_generator_NN(mode_generator_base):
 				tape.watch(input_)
 				predict_ph=model(input_)
 				jacobian_ph=tape.jacobian(predict_ph,input_)
-				print(jacobian_ph)
+				print("jacobian_ph",jacobian_ph)
        
 		for comps, model in self.ph_residual_models.items():
 			#ph_pred[:,comps_to_list(comps)] += model(augment_features(theta, model.features)).numpy()*self.ph_res_coefficients[comps]
@@ -1944,8 +1944,8 @@ class mode_generator_NN(mode_generator_base):
 			with tf.GradientTape() as tape:
 				tape.watch(input_)
 				predict_res_ph=model(input_)
-				jacobian_ph+=tape.jacobian(predict_res_ph,input_)
-				print(jacobian_ph)
+				jacobian_res_ph=tape.jacobian(predict_res_ph,input_)
+				print("jacobian_res_ph",jacobian_res_ph)
 				
 		return amp_pred, ph_pred		
 
