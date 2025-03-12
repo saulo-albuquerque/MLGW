@@ -1919,8 +1919,8 @@ class mode_generator_NN(mode_generator_base):
 		#each theta row will give us a matrix with NxM dimensions, where N = number of dimmensions in theta, and M is the number of outputs
 		amp_grad = np.zeros((theta.shape[0], self.amp_PCA.get_dimensions()[1],theta.shape[1]))
 		ph_grad = np.zeros((theta.shape[0], self.ph_PCA.get_dimensions()[1],theta.shape[1]))
-		input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
-		#
+		input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))				
+		
 		for comps, model in self.amp_models.items():
 			input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
 			with tf.GradientTape() as tape:
