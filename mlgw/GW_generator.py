@@ -1926,27 +1926,36 @@ class mode_generator_NN(mode_generator_base):
 			with tf.GradientTape() as tape:
          			tape.watch(input_)  # Watch the input tensor
          			predict_amp=model.predict(input_)
-				jacobian_amp = tape.jacobian(predict_amp, input_)
-				for i in comps_to_list(components):
-					amp_grad[i,:]=jacobian_amp[i,:,i]
+				try:
+					jacobian_amp = tape.jacobian(predict_amp, input_)
+					for i in comps_to_list(components):
+						amp_grad[i,:]=jacobian_amp[i,:,i]
+				except:
+					print("gradampfailed")
 		
 		for comps, model in self.ph_models.items():
 			input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
 			with tf.GradientTape() as tape:
          			tape.watch(input_)  # Watch the input tensor
          			predict_ph=model.predict(input_)
-				jacobian_ph = tape.jacobian(predict_ph, input_)
-				for i in comps_to_list(components):
-					ph_grad[i,:]=jacobian_ph[i,:,i]
+				try:
+					jacobian_ph = tape.jacobian(predict_ph, input_)
+					for i in comps_to_list(components):
+						ph_grad[i,:]=jacobian_ph[i,:,i]
+				except:
+					print("gradphifailed")
         
 		for comps, model in self.ph_residual_models.items():
 			input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
 			with tf.GradientTape() as tape:
          			tape.watch(input_)  # Watch the input tensor
          			predict_ph_res=model.predict(input_)
-				jacobian_ph_res = tape.jacobian(predict_ph_res, input_)
-				for i in comps_to_list(components):
-					ph_grad[i,:]=+=jacobian_ph_res[i,:,i]
+				try:
+					jacobian_ph_res = tape.jacobian(predict_ph_res, input_)
+					for i in comps_to_list(components):
+						ph_grad[i,:]=+=jacobian_ph_res[i,:,i]
+				except:
+					print("gradresphifailed")
 		return amp_grad, ph_grad
 	#def get_input_gradients(self, theta):
         #	"""
