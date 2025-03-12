@@ -1944,7 +1944,7 @@ class mode_generator_NN(mode_generator_base):
 			with tg.GradientTape() as tape:
 				tape.watch(input_)
 				predict_res_ph=model(input_)
-				jacobian_ph=+=tape.jacobian(predict_res_ph,input_)
+				jacobian_ph+=tape.jacobian(predict_res_ph,input_)
 				print(jacobian_ph)
 				
 		return amp_pred, ph_pred		
