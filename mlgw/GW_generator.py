@@ -1941,7 +1941,7 @@ class mode_generator_NN(mode_generator_base):
 		for comps, model in self.ph_residual_models.items():
 			#ph_pred[:,comps_to_list(comps)] += model(augment_features(theta, model.features)).numpy()*self.ph_res_coefficients[comps]
 			input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
-			with tg.GradientTape() as tape:
+			with tf.GradientTape() as tape:
 				tape.watch(input_)
 				predict_res_ph=model(input_)
 				jacobian_ph+=tape.jacobian(predict_res_ph,input_)
