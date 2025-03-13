@@ -1903,53 +1903,53 @@ class mode_generator_NN(mode_generator_base):
 
 		return amp_pred, ph_pred
 	
-	def get_red_grads(self, theta):
-		"""
-		Returns the grads of the PCA reduced coefficients w.r.t. the input variables, as estimated by the final trained neural network models.
+	#def get_red_grads(self, theta):
+	#	"""
+	#	Returns the grads of the PCA reduced coefficients w.r.t. the input variables, as estimated by the final trained neural network models.
+	#
+	#	Input:
+	#		theta: :class:`~numpy:numpy.ndarray`
+	#			shape (N,3) - source parameters to make prediction at
+	#
+	#	Output:
+	#		red_amp,red_ph: :class:`~numpy:numpy.ndarray`
+	#			shape (N,K,3) - PCA reduced amplitude and phase
+	#	"""
+	#	comps_to_list = lambda comps_str: [int(c) for c in comps_str]
+	#	#new way
+	#	amp_grad = np.zeros((theta.shape[0], self.amp_PCA.get_dimensions()[1],theta.shape[1]))
+	#	ph_pred = np.zeros((theta.shape[0], self.ph_PCA.get_dimensions()[1],theta.shape[1]))
+	#	
+	#	for comps, model in self.amp_models.items():
+	#		#amp_pred[:,comps_to_list(comps)] = model(augment_features(theta, model.features)).numpy()
+	#		input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
+	#		with tf.GradientTape() as tape:
+	#			tape.watch(input_)
+	#			predict_amp=model(input_)
+	#			jacobian_amp=tape.jacobian(predict_amp,input_)
+	#			print("jacobian_amp",jacobian_amp)
+	#			
+	#	for comps, model in self.ph_models.items():
+	#		#ph_pred[:,comps_to_list(comps)] = model(augment_features(theta, model.features)).numpy()
+	#		input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
+	#		with tf.GradientTape() as tape:
+	#			tape.watch(input_)
+	#			predict_ph=model(input_)
+	#			jacobian_ph=tape.jacobian(predict_ph,input_)
+	#			print("jacobian_ph",jacobian_ph)
+        #
+	#	for comps, model in self.ph_residual_models.items():
+	#		#ph_pred[:,comps_to_list(comps)] += model(augment_features(theta, model.features)).numpy()*self.ph_res_coefficients[comps]
+	#		input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
+	#		with tf.GradientTape() as tape:
+	#			tape.watch(input_)
+	#			predict_res_ph=model(input_)
+	#			jacobian_res_ph=tape.jacobian(predict_res_ph,input_)
+	#			print("jacobian_res_ph",jacobian_res_ph)
+	#			
+	#	return amp_pred, ph_pred		
 
-		Input:
-			theta: :class:`~numpy:numpy.ndarray`
-				shape (N,3) - source parameters to make prediction at
-
-		Output:
-			red_amp,red_ph: :class:`~numpy:numpy.ndarray`
-				shape (N,K,3) - PCA reduced amplitude and phase
-		"""
-		comps_to_list = lambda comps_str: [int(c) for c in comps_str]
-		#new way
-		amp_grad = np.zeros((theta.shape[0], self.amp_PCA.get_dimensions()[1],theta.shape[1]))
-		ph_pred = np.zeros((theta.shape[0], self.ph_PCA.get_dimensions()[1],theta.shape[1]))
-		
-		for comps, model in self.amp_models.items():
-			#amp_pred[:,comps_to_list(comps)] = model(augment_features(theta, model.features)).numpy()
-			input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
-			with tf.GradientTape() as tape:
-				tape.watch(input_)
-				predict_amp=model(input_)
-				jacobian_amp=tape.jacobian(predict_amp,input_)
-				print("jacobian_amp",jacobian_amp)
-				
-		for comps, model in self.ph_models.items():
-			#ph_pred[:,comps_to_list(comps)] = model(augment_features(theta, model.features)).numpy()
-			input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
-			with tf.GradientTape() as tape:
-				tape.watch(input_)
-				predict_ph=model(input_)
-				jacobian_ph=tape.jacobian(predict_ph,input_)
-				print("jacobian_ph",jacobian_ph)
-       
-		for comps, model in self.ph_residual_models.items():
-			#ph_pred[:,comps_to_list(comps)] += model(augment_features(theta, model.features)).numpy()*self.ph_res_coefficients[comps]
-			input_ = tf.constant(augment_features(theta, model.features).astype(np.float32))
-			with tf.GradientTape() as tape:
-				tape.watch(input_)
-				predict_res_ph=model(input_)
-				jacobian_res_ph=tape.jacobian(predict_res_ph,input_)
-				print("jacobian_res_ph",jacobian_res_ph)
-				
-		return amp_pred, ph_pred		
-
-	def get_red_grads_2(self, theta):
+	def get_red_grads_final(self, theta):
 		"""
 		Returns the grads of the PCA reduced coefficients w.r.t. the input variables, as estimated by the final trained neural network models.
 
@@ -1975,8 +1975,8 @@ class mode_generator_NN(mode_generator_base):
 				jacobian_amp=tape.jacobian(predict_amp,input_)  
 				for i in range(theta.shape[0]):
 								amp_grad[i]=jacobian_amp[i,:,i] 
-								print(f"{i}",amp_grad[i])   
-				print("jacobian_amp",amp_grad)
+								#print(f"{i}",amp_grad[i])   
+				#print("jacobian_amp",amp_grad)
 				
 		for comps, model in self.ph_models.items():
 			#ph_pred[:,comps_to_list(comps)] = model(augment_features(theta, model.features)).numpy()
@@ -1987,10 +1987,10 @@ class mode_generator_NN(mode_generator_base):
 				jacobian_ph=tape.jacobian(predict_ph,input_)
 				for i in range(theta.shape[0]):
 								jac=jacobian_ph[i,:,i,:theta.shape[1]]
-								print(f"jac_ph_{comps}",jac)      
+								#print(f"jac_ph_{comps}",jac)      
 								ph_grad[i,comps_to_list(comps),:]=(jacobian_ph[i,:,i,:theta.shape[1]])
-								print(f"{i}",ph_grad[i])
-				print("jacobian_ph",ph_grad)
+								#print(f"{i}",ph_grad[i])
+				#print("jacobian_ph",ph_grad)
        
 		for comps, model in self.ph_residual_models.items():
 			#ph_pred[:,comps_to_list(comps)] += model(augment_features(theta, model.features)).numpy()*self.ph_res_coefficients[comps]
@@ -2001,10 +2001,10 @@ class mode_generator_NN(mode_generator_base):
 				jacobian_res_ph=tape.jacobian(predict_res_ph,input_)
 				for i in range(theta.shape[0]):
 								jac=jacobian_res_ph[i,:,i,:theta.shape[1]]
-								print(f"jac_ph_{comps}",jac)      
+								#print(f"jac_ph_{comps}",jac)      
 								ph_grad[i,comps_to_list(comps),:]+=(jacobian_res_ph[i,:,i,:theta.shape[1]])
-								print(f"{i}",ph_grad[i])
-				print("jacobian_res_ph",ph_grad)
+								#print(f"{i}",ph_grad[i])
+				#print("jacobian_res_ph",ph_grad)
 				
 		return amp_grad, ph_grad	
 
