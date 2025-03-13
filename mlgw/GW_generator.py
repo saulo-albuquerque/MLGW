@@ -2027,13 +2027,14 @@ class mode_generator_NN(mode_generator_base):
 		#amp
 		D, K_amp = self.amp_PCA.get_dimensions()
 		grad_g_amp = np.zeros((theta.shape[0], K_amp, theta.shape[1])) #(N,K,3)
+		grad_amp, grad_ph= self.get_red_grads_final(theta)
 		for k in range(K_amp):
-			grad_g_amp[:,k,:] = self.get_red_grads_final(theta)[0] #(N,3)
+			grad_g_amp[:,k,:] = grad_amp[:,k,:] #(N,3)
 		#ph
 		D, K_ph = self.ph_PCA.get_dimensions()
 		grad_g_ph = np.zeros((theta.shape[0], K_ph, theta.shape[1])) #(N,K,3)
 		for k in range(K_ph):
-			grad_g_ph[:,k,:] = self.get_red_grads_final(theta)[1] #(N,3)
+			grad_g_ph[:,k,:] = grad_ph[:,k,:] #(N,3)
 		
 			#computing gradients
 		#amp
