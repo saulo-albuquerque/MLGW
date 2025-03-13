@@ -2008,6 +2008,45 @@ class mode_generator_NN(mode_generator_base):
 				
 		return amp_grad, ph_grad	
 
+	def get_raw_grads(self, theta):
+		"""
+		Computes the gradients of the amplitude and phase w.r.t. (q,s1,s2).
+		Gradients are functions dependent on time and are evaluated on the internal reduced grid (mode_generator.get_time_grid()).
+
+		Input:
+			theta: :class:`~numpy:numpy.ndarray`
+				shape (N,3) - Values of orbital parameters to compute the gradient at
+		
+		Output:
+			grad_amp: :class:`~numpy:numpy.ndarray`
+				shape (N,D,3) - Gradients of the amplitude
+			grad_ph: :class:`~numpy:numpy.ndarray`
+				shape (N,D,3) - Gradients of the phase
+		"""
+			#computing gradient for the reduced coefficients g
+		#amp
+		D, K_amp = self.amp_PCA.get_dimensions()
+		grad_g_amp = np.zeros((theta.shape[0], K_amp, theta.shape[1])) #(N,K,3)
+		for k in range(K_amp):
+			grad_g_amp[:,k,:] = self.get_red_grads_final(theta)[0] #(N,3)
+		#ph
+		D, K_ph = self.ph_PCA.get_dimensions()
+		grad_g_ph = np.zeros((theta.shape[0], K_ph, theta.shape[1])) #(N,K,3)
+		for k in range(K_ph):
+			grad_g_ph[:,k,:] = self.get_red_grads_final(theta)[1] #(N,3)
+		
+			#computing gradients
+		#amp
+		grad_amp = np.zeros((theta.shape[0], D, theta.shape[1])) #(N,D,3)
+		for i in range(theta.shape[1]):
+			grad_amp[:,:,i] = self.amp_PCA.reconstruct_data(grad_g_amp[:,:,i]) - self.amp_PCA.PCA_params[1] #(N,D)
+		#ph
+		grad_ph = np.zeros((theta.shape[0], D, theta.shape[1])) #(N,D,3)
+		for i in range(theta.shape[1]):
+			grad_ph[:,:,i] = self.ph_PCA.reconstruct_data(grad_g_ph[:,:,i]) - self.ph_PCA.PCA_params[1] #(N,D)
+
+		return grad_amp, grad_ph
+
 
 
 	
